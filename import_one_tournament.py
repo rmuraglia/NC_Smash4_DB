@@ -46,6 +46,11 @@ except urllib2.HTTPError as err :
     print 'Exiting script...'
     sys.exit(1)
 
+# if tournament is not complete, then exit script with warning
+if tournament['completed-at'] is None :
+    print 'Tournament <' + tournament['name'] + '> was not marked as completed.\n Please verify that this is a tournament you want to import with this script.\n If this represents a bracket pool from a larger tournament, please use a different script.\n Exiting this script without importing any data.'
+    sys.exit(1)
+
 # load set information
 try :
     matches = challonge.matches.index(t_name)
@@ -84,12 +89,12 @@ player_list = [x[0].lower() for x in player_list_raw]
 
 # helper functions
 def new_tag(tag) :
-    response = raw_input("No player tag matches found for " + tag + ". \n What would you like their players.main_tag entry to be? \n Type your response with no quotes. If you would like to accept this tag as their permanent tag, simply press enter. \n \n")
+    response = raw_input("No player tag matches found for <" + tag + ">. \n What would you like their players.main_tag entry to be? \n Type your response with no quotes. If you would like to accept this tag as their permanent tag, simply press enter. \n \n")
     if response == '' : return tag.lower()
     else : return response.lower()
 
 def real_name_prompt(tag) :
-    response = raw_input("Would you like to assign a real name for " + tag + "? \n If so, please type their name with no quotes. If not, simply press enter. \n \n")
+    response = raw_input("Would you like to assign a real name for <" + tag + ">? \n If so, please type their name with no quotes. If not, simply press enter. \n \n")
     if response == '' : return None
     else : return response
 
@@ -111,13 +116,13 @@ for participant in participants :
 
     if any(match_bools) : #there was a player-tag match
         best_guess = player_list[match_bools.index(True)]
-        keep_match = raw_input("We found that player tag " + best_guess + " is our best guess match for tournament tag " + participant['name'] + ". \n Do you accept merging these two tags? \n Please respond with either Y or N, without quotes. \n \n").lower()
+        keep_match = raw_input("Player tag <" + best_guess + "> is our current guess match for tournament tag <" + participant['name'] + ">. \n Do you accept merging these two tags? \n Please respond with either Y or N, without quotes. \n \n").lower()
         if keep_match=='y': # accept merge - only need entry in tags table
             main_tag = best_guess
         elif keep_match=='n' : # reject merge and make new player record
             main_tag = new_player(participant['name'])
         else : # invalid response for merge - skip this participant
-            print "Warning: unclear merging response for tournament tag " + participant['name'] + ". \nPlease take note and respond with ONLY Y or N next time. \n"
+            print "Warning: unclear merging response for tournament tag <" + participant['name'] + ">. \nPlease take note and respond with ONLY Y or N next time. \n"
             continue
     else : # there was no player-tag match
         main_tag = new_player(participant['name'])
@@ -125,6 +130,10 @@ for participant in participants :
     # add new tag record for all participants, new and old
     cur.execute('select id from players where main_tag = %s ;', (main_tag, ))
     p_id = cur.fetchone()[0]
+    try : 
+        cur.fetchall() # flush cursor in case of duplicate
+    except mysql.connector.errors.InterfaceError :
+        pass # if cursor was already empty, just proceed
     cur.execute('insert into tags (id, tag, player_id) values (%s, %s, %s);', (participant['id'], participant['name'], p_id))
     cnx.commit()
 
@@ -180,7 +189,7 @@ def get_winner(sc1, sc2, id) :
     elif sc1 > sc2 : 
         return 1
     else : 
-        print "Warning: a winner cannot be determined for set " + str(id) + ". Please verify this set's results." 
+        print "Warning: a winner cannot be determined for set <" + str(id) + ">. Please verify this set's results." 
         return None
 
 def parse_scores_csv(match) :
@@ -198,12 +207,12 @@ def parse_scores_csv(match) :
             sc1 = int(score_split[0])
             sc2 = -int(score_split[2])
         else : 
-            print "Warning: there was an abnormal game count for set " + match['id'] + ". Please verify this set's results."
-            return None
+            print "Warning: there was an abnormal game count for set <" + match['id'] + ">. Please verify this set's results."
+            return [None, None, None]
         w = get_winner(sc1, sc2, match['id'])
     else :
-        print "Warning: there was an abnormal game count for set " + match['id'] + ". Please verify this set's results."
-        return None
+        print "Warning: there was an abnormal game count for set <" + match['id'] + ">. Please verify this set's results."
+        return [None, None, None]
     return [sc1, sc2, w]
 
 for match in matches :

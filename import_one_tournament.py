@@ -131,10 +131,10 @@ def real_name_prompt(tag) :
 def new_player(tag) :
     main_tag = new_tag(tag)
     real_name = real_name_prompt(tag)
-    cur.execute('select max(p_id) from players;')
-    last_pid = cur.fetchone()[0]
-    if last_pid is None : next_pid = 1 # this is the first entry
-    else : next_pid = last_pid + 1
+    cur.execute('select max(id) from players;')
+    last_id = cur.fetchone()[0]
+    if last_id is None : next_pid = 1 # this is the first entry
+    else : next_pid = last_id + 1
     cur.execute('insert into players (p_id, main_tag, real_name) values (%s, %s, %s);', (next_pid, main_tag, real_name))
     return main_tag
 
@@ -149,7 +149,7 @@ for participant in participants :
         guess_inds = [i for i, j in enumerate(match_bools) if j==True]
         for i in guess_inds :
             guess = player_list[i]
-            keep_match = raw_input("Player tag < " + guess + " > is our current guess match for tournament tag < " + participant['name'] + " >. \n Do you accept merging these two tags? \n Please respond with either 'y' with quotes if you want to accept this merge. All other responses will be taken as a no. \n \n").lower()
+            keep_match = raw_input("Player tag < " + guess + " > is our current guess match for tournament tag < " + participant['name'] + " >. \n Do you accept merging these two tags? \n Please respond with 'y' without quotes if you want to accept this merge. All other responses will be taken as a no. \n \n").lower()
             if keep_match == 'y' : # accept merge - only need entry in tags table
                 main_tag = guess
                 break

@@ -101,8 +101,79 @@ cur = cnx.cursor()
 
 print 'All information fetched, and we are successfully connected to database. We are ready to go!'
 
+"""
+Part 2: Import tournament information
+"""
+
+print '\n-------------------------------------'
+print '---Begin tournament import-----------'
+print '-------------------------------------\n'
+
+# get season delimiters
+season_dates = []
+cur.execute('select end_date from seasons;')
+while True :
+    try :
+        season_dates.append(cur.fetchone()[0])
+    except TypeError :
+        print 'All season end dates have been fetched and appended'
+        break
+
+# add game release as earliest possible day for tournament
+cur.execute('select start_date from seasons where id = 0;')
+release_date = cur.fetchone()[0]
+season_dates.insert(0, release_date)
+
+def get_season(tourney_date, season_dates) :
+    if tourney_date < season_dates[0] :
+        print "Tourney date appears to be before game's release."
+        print "Please double check your date"
+        return None
+    elif tourney_date > season_dates[-1] :
+        print "Tourney date appears to be after end of current season."
+        print "Please double check that seasons table is up to date with current season."
+        return None
+    else :
+        season_id = [i for i in xrange(len(season_dates)) if season_dates[i]<tourney_date<=season_dates[i+1]][0]
+        return season_id
+
+t_id = tournament['id']
+t_title = tournament['name']
+t_date = tournament['started-at'].date()
+t_season = get_season(t_date, season_dates)
+t_num_entrants = tournament['participants-count']
+t_url = tournament['full-challonge-url']
+
+# double check that we haven't already imported this tournament
+cur.execute('select * from tournaments where id = %s and title = %s and tourney_date = %s and season = %s and num_entrants = %s and url = %s ;', (t_id, t_title, t_date, t_season, t_num_entrants, t_url))
+t_check = cur.fetchall()
+
+if len(t_check)>0 :
+    while True :
+        t_resp = raw_input("It appears that this tournament has already been imported to the database. Would you like to proceed with the re-import anyway? Please respond either 'y' or 'n' without quotes. \n \n").lower()
+        if t_resp == 'y' :
+            print "Continuing with import..."
+            break
+        elif t_resp == 'n' :
+            print "Aborting import..."
+            cur.close()
+            cnx.close()
+            sys.exit(1)
+        else :
+            print "Response must be one of 'y' or 'n'. Please try again."
+
+cur.execute('select * from tournaments where id = %s and title = %s and tourney_date = %s and season = %s and num_entrants = %s and url = %s ;', (t_id, t_title, t_date, 13, t_num_entrants, t_url))
+
+
+cur.execute('insert ignore into tournaments (id, title, tourney_date, season, num_entrants, url) values (%s, %s, %s, %s, %s, %s);', (t_id, t_title, t_date, t_season, t_num_entrants, t_url))
+cnx.commit()
+
+print '\n-------------------------------------'
+print '---Tournament import complete--------'
+print '-------------------------------------\n'
+
 """ 
-Part 2: Import player and tag information.
+Part 3: Import player and tag information.
 Sort through list of challonge tags for tournament and decide which ones are new players, and which are aliases of existing players
 Add new uniques to the players table
 Add all tags to tags table to map back to unique players
@@ -171,55 +242,6 @@ for participant in participants :
 
 print '\n-------------------------------------'
 print '---Participant import complete-------'
-print '-------------------------------------\n'
-
-"""
-Part 3: Import tournament information
-"""
-
-print '\n-------------------------------------'
-print '---Begin tournament import-----------'
-print '-------------------------------------\n'
-
-# get season delimiters
-season_dates = []
-cur.execute('select end_date from seasons;')
-while True :
-    try :
-        season_dates.append(cur.fetchone()[0])
-    except TypeError :
-        print 'All season end dates have been fetched and appended'
-        break
-
-# add game release as earliest possible day for tournament
-cur.execute('select start_date from seasons where id = 0;')
-release_date = cur.fetchone()[0]
-season_dates.insert(0, release_date)
-
-def get_season(tourney_date, season_dates) :
-    if tourney_date < season_dates[0] :
-        print "Tourney date appears to be before game's release."
-        print "Please double check your date"
-        return None
-    elif tourney_date > season_dates[-1] :
-        print "Tourney date appears to be after end of current season."
-        print "Please double check that seasons table is up to date with current season."
-        return None
-    else :
-        season_id = [i for i in xrange(len(season_dates)) if season_dates[i]<tourney_date<=season_dates[i+1]][0]
-        return season_id
-
-t_id = tournament['id']
-t_title = tournament['name']
-t_date = tournament['started-at'].date()
-t_season = get_season(t_date, season_dates)
-t_num_entrants = tournament['participants-count']
-t_url = tournament['full-challonge-url']
-cur.execute('insert ignore into tournaments (id, title, tourney_date, season, num_entrants, url) values (%s, %s, %s, %s, %s, %s);', (t_id, t_title, t_date, t_season, t_num_entrants, t_url))
-cnx.commit()
-
-print '\n-------------------------------------'
-print '---Tournament import complete--------'
 print '-------------------------------------\n'
 
 """

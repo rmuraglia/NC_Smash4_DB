@@ -162,9 +162,6 @@ if len(t_check)>0 :
         else :
             print "Response must be one of 'y' or 'n'. Please try again."
 
-cur.execute('select * from tournaments where id = %s and title = %s and tourney_date = %s and season = %s and num_entrants = %s and url = %s ;', (t_id, t_title, t_date, 13, t_num_entrants, t_url))
-
-
 cur.execute('insert ignore into tournaments (id, title, tourney_date, season, num_entrants, url) values (%s, %s, %s, %s, %s, %s);', (t_id, t_title, t_date, t_season, t_num_entrants, t_url))
 cnx.commit()
 

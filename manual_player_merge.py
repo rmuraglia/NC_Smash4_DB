@@ -35,6 +35,9 @@ merge_p1_p2('haise', 'oneeyedking')
 merge_p1_p2('kwam', 'wes')
 merge_p1_p2('arronator', 'arronater')
 
+merge_p1_p2('haise', 'centipede')
+merge_p1_p2('loch', 'md')
+merge_p1_p2('stumpy', 'jakop')
 # close connection to db
 cur.close()
 cnx.close()

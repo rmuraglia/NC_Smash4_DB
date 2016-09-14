@@ -111,10 +111,10 @@ for participant in participants :
 
     if any(match_bools) : #there was a player-tag match
         best_guess = player_list[match_bools.index(True)]
-        keep_match = raw_input("We found that player tag " + best_guess + " is our best guess match for tournament tag " + participant['name'] + ". \n Do you accept merging these two tags? \n Please respond with either Y or N, without quotes. \n \n")
-        if keep_match=='Y': # accept merge - only need entry in tags table
+        keep_match = raw_input("We found that player tag " + best_guess + " is our best guess match for tournament tag " + participant['name'] + ". \n Do you accept merging these two tags? \n Please respond with either Y or N, without quotes. \n \n").lower()
+        if keep_match=='y': # accept merge - only need entry in tags table
             main_tag = best_guess
-        elif keep_match=='N' : # reject merge and make new player record
+        elif keep_match=='n' : # reject merge and make new player record
             main_tag = new_player(participant['name'])
         else : # invalid response for merge - skip this participant
             print "Warning: unclear merging response for tournament tag " + participant['name'] + ". \nPlease take note and respond with ONLY Y or N next time. \n"

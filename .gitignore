@@ -1,5 +1,8 @@
 
 challonge_credentials.txt
 *_RM-notes*
-
 tournament_directories.txt
+nc_smash4_backup.mysql
+dat/*
+.DS_Store
+*.swp

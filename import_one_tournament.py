@@ -11,6 +11,13 @@ from pprint import pprint
 import re
 import sys
 import datetime
+import os
+from subprocess import call
+import pickle
+
+print '\n-------------------------------------'
+print '---Begin script----------------------'
+print '-------------------------------------\n'
 
 """
 Part 1: import tourney data from API
@@ -48,7 +55,7 @@ except urllib2.HTTPError as err :
 
 # if tournament is not complete, then exit script with warning
 if tournament['completed-at'] is None :
-    print 'Tournament <' + tournament['name'] + '> was not marked as completed.\n Please verify that this is a tournament you want to import with this script.\n If this represents a bracket pool from a larger tournament, please use a different script.\n Exiting this script without importing any data.'
+    print 'Tournament < ' + tournament['name'] + ' > was not marked as completed.\n Please verify that this is a tournament you want to import with this script.\n If this represents a bracket pool from a larger tournament, please use a different script.\n Exiting this script without importing any data.'
     sys.exit(1)
 
 # load set information
@@ -71,9 +78,28 @@ except urllib2.HTTPError as err :
     print 'Exiting script...'
     sys.exit(1)
 
+# save all data to file
+print 'Saving challonge data to file...'
+# create directory if it doesn't exist yet
+data_dir = 'dat/' + t_name
+if not os.path.exists(data_dir) :
+    os.makedirs(data_dir)
+
+# save data in binary pickle format for speed. if want ASCII for human readable, choose '0' protocol
+with open(data_dir + '/tournament.pickle', 'wb') as f : pickle.dump(tournament, f, pickle.HIGHEST_PROTOCOL)
+with open(data_dir + '/matches.pickle', 'wb') as f : pickle.dump(matches, f, pickle.HIGHEST_PROTOCOL)
+with open(data_dir + '/participants.pickle', 'wb') as f : pickle.dump(participants, f, pickle.HIGHEST_PROTOCOL)
+# to read: with open('file.pickle', 'rb') as f : dat = pickle.load(f)
+
+print 'Backing up database...'
+call('mysqldump --databases nc_smash4 > nc_smash4_backup.mysql', shell=True)
+# reload with 'mysql < nc_smash4_backup.mysql' at terminal
+
 # connect to db
 cnx = mysql.connector.connect(database='nc_smash4', option_files='/Users/rmuraglia/.my.cnf')
 cur = cnx.cursor()
+
+print 'All information fetched, and we are successfully connected to database. We are ready to go!'
 
 """ 
 Part 2: Import player and tag information.
@@ -82,6 +108,10 @@ Add new uniques to the players table
 Add all tags to tags table to map back to unique players
 """
 
+print '\n-------------------------------------'
+print '---Begin participant import----------'
+print '-------------------------------------\n'
+
 # get list of players already in db
 cur.execute('select main_tag from players;')
 player_list_raw = cur.fetchall()
@@ -89,12 +119,12 @@ player_list = [x[0].lower() for x in player_list_raw]
 
 # helper functions
 def new_tag(tag) :
-    response = raw_input("No player tag matches found for <" + tag + ">. \n What would you like their players.main_tag entry to be? \n Type your response with no quotes. If you would like to accept this tag as their permanent tag, simply press enter. \n \n")
+    response = raw_input("No player tag matches found for < " + tag + " >. \n What would you like their players.main_tag entry to be? \n Type your response with no quotes. If you would like to accept this tag as their permanent tag, simply press enter. \n \n")
     if response == '' : return tag.lower()
     else : return response.lower()
 
 def real_name_prompt(tag) :
-    response = raw_input("Would you like to assign a real name for <" + tag + ">? \n If so, please type their name with no quotes. If not, simply press enter. \n \n")
+    response = raw_input("Would you like to assign a real name for < " + tag + " >? \n If so, please type their name with no quotes. If not, simply press enter. \n \n")
     if response == '' : return None
     else : return response
 
@@ -111,19 +141,21 @@ def new_player(tag) :
 # loop through and process each challonge participant
 for participant in participants :
 
+    main_tag = None # reset main_tag
     # check if this participant matches any records in player table
     match_bools = [x in participant['name'].lower() for x in player_list]
 
-    if any(match_bools) : #there was a player-tag match
-        best_guess = player_list[match_bools.index(True)]
-        keep_match = raw_input("Player tag <" + best_guess + "> is our current guess match for tournament tag <" + participant['name'] + ">. \n Do you accept merging these two tags? \n Please respond with either Y or N, without quotes. \n \n").lower()
-        if keep_match=='y': # accept merge - only need entry in tags table
-            main_tag = best_guess
-        elif keep_match=='n' : # reject merge and make new player record
+    if any(match_bools) : # there was a player-tag match
+        guess_inds = [i for i, j in enumerate(match_bools) if j==True]
+        for i in guess_inds :
+            guess = player_list[i]
+            keep_match = raw_input("Player tag < " + guess + " > is our current guess match for tournament tag < " + participant['name'] + " >. \n Do you accept merging these two tags? \n Please respond with either 'y' with quotes if you want to accept this merge. All other responses will be taken as a no. \n \n").lower()
+            if keep_match == 'y' : # accept merge - only need entry in tags table
+                main_tag = guess
+                break
+        if main_tag == None : # if no guesses were accepted
+            print "Sorry we could not find a match for player tag < " + participant['name'] + " >. \n Let's set up a new player record for them.\n"
             main_tag = new_player(participant['name'])
-        else : # invalid response for merge - skip this participant
-            print "Warning: unclear merging response for tournament tag <" + participant['name'] + ">. \nPlease take note and respond with ONLY Y or N next time. \n"
-            continue
     else : # there was no player-tag match
         main_tag = new_player(participant['name'])
 
@@ -137,9 +169,17 @@ for participant in participants :
     cur.execute('insert into tags (id, tag, player_id) values (%s, %s, %s);', (participant['id'], participant['name'], p_id))
     cnx.commit()
 
+print '\n-------------------------------------'
+print '---Participant import complete-------'
+print '-------------------------------------\n'
+
 """
 Part 3: Import tournament information
 """
+
+print '\n-------------------------------------'
+print '---Begin tournament import-----------'
+print '-------------------------------------\n'
 
 # get season delimiters
 season_dates = []
@@ -178,9 +218,20 @@ t_url = tournament['full-challonge-url']
 cur.execute('insert into tournaments (id, title, tourney_date, season, num_entrants, url) values (%s, %s, %s, %s, %s, %s);', (t_id, t_title, t_date, t_season, t_num_entrants, t_url))
 cnx.commit()
 
+print '\n-------------------------------------'
+print '---Tournament import complete--------'
+print '-------------------------------------\n'
+
 """
 Part 4: Import set information
 """
+
+print '\n-------------------------------------'
+print '---Begin set import------------------'
+print '-------------------------------------\n'
+
+# set up container for weird sets that throw an exception
+inspect_sets = [] # as a global variable can this be edited by functions if it isn't returned?
 
 # helper functions
 def get_winner(sc1, sc2, id) :
@@ -189,11 +240,17 @@ def get_winner(sc1, sc2, id) :
     elif sc1 > sc2 : 
         return 1
     else : 
-        print "Warning: a winner cannot be determined for set <" + str(id) + ">. Please verify this set's results." 
+        print "Warning: a winner cannot be determined for set < " + str(id) + " >. Please verify this set's results." 
+        inspect_sets.append(id)
         return None
 
 def parse_scores_csv(match) :
-    score_split = match['scores-csv'].split('-')
+    try : 
+        score_split = match['scores-csv'].split('-')
+    except AttributeError :
+        print "Warning: there was an abnormal game count for set < " + str(match['id']) + " >. Please verify this set's results."
+        inspect_sets.append(match['id'])
+        return [None, None, None]
     if len(score_split)==2 : # this is a regular score
         sc1 = int(score_split[0])
         sc2 = int(score_split[1])
@@ -207,11 +264,13 @@ def parse_scores_csv(match) :
             sc1 = int(score_split[0])
             sc2 = -int(score_split[2])
         else : 
-            print "Warning: there was an abnormal game count for set <" + match['id'] + ">. Please verify this set's results."
+            print "Warning: there was an abnormal game count for set < " + str(match['id']) + " >. Please verify this set's results."
+            inspect_sets.append(match['id'])
             return [None, None, None]
         w = get_winner(sc1, sc2, match['id'])
     else :
-        print "Warning: there was an abnormal game count for set <" + match['id'] + ">. Please verify this set's results."
+        print "Warning: there was an abnormal game count for set < " + str(match['id']) + " >. Please verify this set's results."
+        inspect_sets.append(match['id'])
         return [None, None, None]
     return [sc1, sc2, w]
 
@@ -232,9 +291,24 @@ for match in matches :
     cur.execute('insert into sets (id, tourney_id, round, p1_id, p2_id, p1_score, p2_score, winner, p1_prev_set, p2_prev_set, p1_prev_lose, p2_prev_lose) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', (s_id, s_t_id, s_round, p1_id, p2_id, p1_sc, p2_sc, s_w, p1_prev, p2_prev, p1_pl, p2_pl))
     cnx.commit()
 
+print '\n-------------------------------------'
+print '---Set import complete---------------'
+print '-------------------------------------\n'
+
+if len(inspect_sets) > 0 :
+    print 'There were some abnormal set counts that require additional inspection. Please verify the results of the following sets: \n'
+    print inspect_sets
+    with open(data_dir + '/inspect_sets.log', 'w') as f :
+        for entry in inspect_sets :
+            f.write(str(entry) + '\n')
+
 """
 Part 5: Populate player-tourney junction table
 """
+
+print '\n-------------------------------------'
+print '---Begin player-tourney import-------'
+print '-------------------------------------\n'
 
 for participant in participants :
     cur.execute('select player_id from tags where id = %s ;', (participant['id'],))
@@ -242,9 +316,22 @@ for participant in participants :
     t_id = participant['tournament-id'] 
     p_seed = participant['seed']
     p_f_rank = participant['final-rank']
-    cur.execute('insert into player_tournament_junction (tourney_id, player_id, seed, final_rank) values (%s, %s, %s, %s);', (t_id, p_id, p_seed, p_f_rank))
+    cur.execute('insert ignore into player_tournament_junction (tourney_id, player_id, seed, final_rank) values (%s, %s, %s, %s);', (t_id, p_id, p_seed, p_f_rank))
     cnx.commit()
 
+print '\n-------------------------------------'
+print '---Player-tourney import complete----'
+print '-------------------------------------\n'
+
 # close connection to db
+print 'Closing connection to database...'
 cur.close()
 cnx.close()
+
+print '\n-------------------------------------'
+print '---Script complete-------------------'
+print '-------------------------------------\n'
+
+print 'All done! Please check the logs to see if there are aberrant sets that require further inspection.'
+print 'Quitting Python...'
+sys.exit(1)

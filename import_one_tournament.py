@@ -166,7 +166,7 @@ for participant in participants :
         cur.fetchall() # flush cursor in case of duplicate
     except mysql.connector.errors.InterfaceError :
         pass # if cursor was already empty, just proceed
-    cur.execute('insert into tags (id, tag, player_id) values (%s, %s, %s);', (participant['id'], participant['name'], p_id))
+    cur.execute('insert ignore into tags (id, tag, player_id) values (%s, %s, %s);', (participant['id'], participant['name'], p_id))
     cnx.commit()
 
 print '\n-------------------------------------'
@@ -215,7 +215,7 @@ t_date = tournament['started-at'].date()
 t_season = get_season(t_date, season_dates)
 t_num_entrants = tournament['participants-count']
 t_url = tournament['full-challonge-url']
-cur.execute('insert into tournaments (id, title, tourney_date, season, num_entrants, url) values (%s, %s, %s, %s, %s, %s);', (t_id, t_title, t_date, t_season, t_num_entrants, t_url))
+cur.execute('insert ignore into tournaments (id, title, tourney_date, season, num_entrants, url) values (%s, %s, %s, %s, %s, %s);', (t_id, t_title, t_date, t_season, t_num_entrants, t_url))
 cnx.commit()
 
 print '\n-------------------------------------'
@@ -288,7 +288,7 @@ for match in matches :
     p2_prev = match['player2-prereq-match-id']
     p1_pl = match['player1-is-prereq-match-loser']
     p2_pl = match['player2-is-prereq-match-loser']
-    cur.execute('insert into sets (id, tourney_id, round, p1_id, p2_id, p1_score, p2_score, winner, p1_prev_set, p2_prev_set, p1_prev_lose, p2_prev_lose) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', (s_id, s_t_id, s_round, p1_id, p2_id, p1_sc, p2_sc, s_w, p1_prev, p2_prev, p1_pl, p2_pl))
+    cur.execute('insert ignore into sets (id, tourney_id, round, p1_id, p2_id, p1_score, p2_score, winner, p1_prev_set, p2_prev_set, p1_prev_lose, p2_prev_lose) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);', (s_id, s_t_id, s_round, p1_id, p2_id, p1_sc, p2_sc, s_w, p1_prev, p2_prev, p1_pl, p2_pl))
     cnx.commit()
 
 print '\n-------------------------------------'

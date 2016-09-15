@@ -38,6 +38,67 @@ merge_p1_p2('arronator', 'arronater')
 merge_p1_p2('haise', 'centipede')
 merge_p1_p2('loch', 'md')
 merge_p1_p2('stumpy', 'jakop')
+
+merge_p1_p2('haise', 'sasaki')
+merge_p1_p2('zepdragon', 'zeppdragon')
+
+merge_p1_p2('the spoon broom', 'the spoonbroom')
+merge_p1_p2('yungz', 'yungsz')
+merge_p1_p2('kdogg', 'kdawgg')
+merge_p1_p2('ohboyhowdy', 'oh boy howdy!')
+
+merge_p1_p2('putthatcookiedown', 'puthatcookiedown')
+merge_p1_p2('The Zone', 'TheZone')
+merge_p1_p2('Pidgey', 'Bayonettamaster23')
+
+merge_p1_p2('thibault', 'thatguy')
+merge_p1_p2('leaf fc', 'leaffc')
+
+merge_p1_p2('l.v. mises', 'l.v.mises')
+merge_p1_p2('luke nasty', 'lukenasty')
+
+merge_p1_p2('GokuGuy', 'SGT|Goku')
+merge_p1_p2('Dublio', 'Oilbud')
+merge_p1_p2('Kaneki', "Hisoka's buttcheeks")
+merge_p1_p2('cakesofspan', 'cakesofpan')
+
+merge_p1_p2('ohboyhowdy', 'oh boyhowdy')
+
+merge_p1_p2('haise', 'hanzogod24')
+
+# merge_p1_p2('arago', 'tank') # verify?
+
+merge_p1_p2('stingers', 'tracergod69')
+merge_p1_p2('donquavious', 'donquaviswiss')
+merge_p1_p2('who-z', 'Loozy')
+
+merge_p1_p2('Dandy Penguin', "Tom Clancy's The Penguin")
+
+merge_p1_p2('sideB', 'side B')
+
+merge_p1_p2('the white glove special', 'whiteglovespecial')
+
+merge_p1_p2('Syde7', 'REIGN')
+merge_p1_p2('revan', 'yo$hig0d')
+
+merge_p1_p2('prince ali', 'prince ali fabulous he ali ababwa')
+
+merge_p1_p2('haise', 'arima')
+merge_p1_p2('Musk Ox', 'MuskOx')
+merge_p1_p2('lazymp', 'YerBoiMP')
+
+merge_p1_p2('Dandy Penguin', 'Oswald Cobblepot')
+merge_p1_p2('thibault', 'mike jones')
+
+merge_p1_p2('revan', 'sonicman')
+merge_p1_p2('haise', 'artorias')
+merge_p1_p2('l.v. mises', 'l.v mises')
+merge_p1_p2('the dorf', 'highti3rg0d')
+
+merge_p1_p2('deepblue', 'big blu')
+
+merge_p1_p2('the dorf', 'hidden sleeper')
+
 # close connection to db
 cur.close()
 cnx.close()

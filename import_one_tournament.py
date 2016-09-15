@@ -286,7 +286,7 @@ def parse_scores_csv(match) :
             print "Warning: there was an abnormal game count for set < " + str(match['id']) + " >. Please verify this set's results."
             inspect_sets.append(match['id'])
             return [None, None, None]
-        w = get_winner(sc1, sc2, match['id'])
+        w = 0 # when there was a DQ don't award a win to anyone
     else :
         print "Warning: there was an abnormal game count for set < " + str(match['id']) + " >. Please verify this set's results."
         inspect_sets.append(match['id'])

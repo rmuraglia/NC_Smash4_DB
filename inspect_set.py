@@ -3,8 +3,8 @@
 import pickle
 from pprint import pprint
 
-tourney_name = 'SmashSansFrontieresSingles0131'
-
+tourney_name = 'SSF0613' # change this line to inspect a given tournament
+ 
 with open('dat/' + tourney_name + '/matches.pickle', 'rb') as f : all_matches = pickle.load(f)
 
 with open('dat/' + tourney_name + '/inspect_sets.log', 'rb') as f : query_matches = f.readlines()

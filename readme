@@ -10,9 +10,4 @@ order to run py scripts:
 to do:
 1) insert PR rankings to season table
 2) codebook for vars and relations
-3) notes detailing strange tag mergings and other manual adjustments
-	3a) when new abberant player entry is made, delete and correct tag tag to point to correct player entry
-4) write in error checking for scores that don't agree with result (like a score of zero for a DQ come on, put a -1 like everyone else)
-5) add in more error checking and cleaning for incomplete tourneys, or pool to bracket tourneys (like old meteors where each pool was its own bracket)
-6) add in flag for forfeits
-7) line 115 consider looping through matches instead of only first
+3) write version to handle incomplete tournaments (no final rank for players without 2 losses) and two phase tournaments like old meteors (process sets of brackets to a single overall tourney ranking)

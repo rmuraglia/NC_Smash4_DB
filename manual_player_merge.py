@@ -99,6 +99,7 @@ merge_p1_p2('deepblue', 'big blu')
 
 merge_p1_p2('the dorf', 'hidden sleeper')
 merge_p1_p2('the dorf', 'bit cloud')
+merge_p1_p2('arago', 'tusk')
 
 # close connection to db
 cur.close()

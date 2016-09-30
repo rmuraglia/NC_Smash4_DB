@@ -101,6 +101,11 @@ merge_p1_p2('the dorf', 'hidden sleeper')
 merge_p1_p2('the dorf', 'bit cloud')
 merge_p1_p2('arago', 'tusk')
 
+merge_p1_p2('KH1COM2', 'Rinse and Repeat Moser')
+merge_p1_p2('Stumpy', 'Koi')
+merge_p1_p2('Buttercup', 'Blossom')
+merge_p1_p2('Eric', 'Eric Schmidt')
+
 # close connection to db
 cur.close()
 cnx.close()
